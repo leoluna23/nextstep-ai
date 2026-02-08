@@ -17,7 +17,30 @@ if (!uri) {
     throw new Error("MONGODB_URI environment variable is not set. Please add it to your .env.local file.");
 }
 
-const options = {};
+// Configure MongoDB client options with proper SSL/TLS settings
+// Check if the URI indicates SSL/TLS is needed (MongoDB Atlas uses mongodb+srv://)
+const isAtlasConnection = uri.startsWith("mongodb+srv://") || uri.includes("ssl=true") || uri.includes("tls=true");
+
+const options: {
+    tls?: boolean;
+    tlsAllowInvalidCertificates?: boolean;
+    tlsAllowInvalidHostnames?: boolean;
+    serverSelectionTimeoutMS?: number;
+    connectTimeoutMS?: number;
+    retryWrites?: boolean;
+    retryReads?: boolean;
+} = {
+    // Enable TLS/SSL for MongoDB Atlas connections
+    // If using mongodb+srv://, TLS is automatically enabled
+    // For regular mongodb:// connections, only enable if explicitly needed
+    ...(isAtlasConnection && !uri.startsWith("mongodb+srv://") ? { tls: true } : {}),
+    // Connection timeout settings (increase for production)
+    serverSelectionTimeoutMS: 30000, // 30 seconds
+    connectTimeoutMS: 30000, // 30 seconds
+    // Retry settings for better reliability
+    retryWrites: true,
+    retryReads: true,
+};
 
 declare global {
     // eslint-disable-next-line no-var

@@ -227,6 +227,12 @@ Make sure these are set in your deployment:
 - Verify `MONGODB_URI` is correct
 - Check MongoDB allows connections from DigitalOcean IPs
 - For MongoDB Atlas, whitelist `0.0.0.0/0` or specific IPs
+- **SSL/TLS Errors**: If you see `ERR_SSL_TLSV1_ALERT_INTERNAL_ERROR`:
+  - Ensure your MongoDB Atlas connection string uses `mongodb+srv://` format
+  - Verify your MongoDB Atlas cluster is running and accessible
+  - Check that your IP whitelist includes DigitalOcean's IP ranges (or use `0.0.0.0/0` for testing)
+  - Ensure your MongoDB Atlas cluster has valid SSL certificates
+  - Try regenerating your connection string from MongoDB Atlas dashboard
 
 ### API Errors
 - Verify API keys are set correctly
