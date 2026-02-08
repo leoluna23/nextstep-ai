@@ -17,9 +17,18 @@ if (!uri) {
     throw new Error("MONGODB_URI environment variable is not set. Please add it to your .env.local file.");
 }
 
+// Validate connection string format
+if (!uri.startsWith("mongodb+srv://") && !uri.startsWith("mongodb://")) {
+    console.warn("Warning: MONGODB_URI should start with 'mongodb+srv://' for MongoDB Atlas or 'mongodb://' for other MongoDB instances");
+}
+
 // Configure MongoDB client options with proper SSL/TLS settings
 // MongoDB Atlas uses mongodb+srv:// which automatically handles TLS
 // For regular mongodb:// connections, we may need to configure TLS explicitly
+
+// For mongodb+srv:// connections, MongoDB driver handles TLS automatically
+// We should NOT set TLS options for SRV connections as it can cause conflicts
+const isSrvConnection = uri.startsWith("mongodb+srv://");
 
 const options: {
     serverSelectionTimeoutMS?: number;
@@ -45,15 +54,15 @@ const options: {
     maxPoolSize: 10,
     minPoolSize: 1,
     maxIdleTimeMS: 30000,
-    // For non-SRV connections, configure TLS if needed
-    // mongodb+srv:// automatically handles TLS, so we don't need to set it
-    ...(uri.startsWith("mongodb://") && (uri.includes("ssl=true") || uri.includes("tls=true")) ? {
+    // For non-SRV connections only, configure TLS if needed
+    // mongodb+srv:// automatically handles TLS, so we don't set TLS options for it
+    ...(isSrvConnection ? {} : (uri.includes("ssl=true") || uri.includes("tls=true") ? {
         tls: true,
         // In production, these should be false for security
         // Set to true only if you're having certificate validation issues
         tlsAllowInvalidCertificates: process.env.NODE_ENV === "development",
         tlsAllowInvalidHostnames: process.env.NODE_ENV === "development",
-    } : {}),
+    } : {})),
 };
 
 declare global {
@@ -69,17 +78,26 @@ function createClient() {
     if (!uri) {
         throw new Error("MONGODB_URI is not set");
     }
+    
+    // Log connection info (without exposing password)
+    const uriPreview = uri.replace(/:([^:@]+)@/, ":****@");
+    console.log(`MongoDB connection: ${uriPreview.substring(0, 50)}... (${isSrvConnection ? "SRV" : "standard"} connection)`);
+    
     try {
         const mongoClient = new MongoClient(uri, options);
         return mongoClient.connect().catch((error) => {
             console.error("MongoDB connection error:", error);
             // Log helpful debugging information
-            if (error.message?.includes("SSL") || error.message?.includes("TLS")) {
+            if (error.message?.includes("SSL") || error.message?.includes("TLS") || error.code === "ERR_SSL_TLSV1_ALERT_INTERNAL_ERROR") {
                 console.error("SSL/TLS Error detected. Check:");
-                console.error("1. MongoDB Atlas connection string format (should be mongodb+srv://...)");
-                console.error("2. IP whitelist in MongoDB Atlas includes DigitalOcean IPs");
+                console.error(`1. Connection string format: ${isSrvConnection ? "✓ Using mongodb+srv://" : "✗ NOT using mongodb+srv:// - MongoDB Atlas requires mongodb+srv://"}`);
+                console.error("2. IP whitelist in MongoDB Atlas includes DigitalOcean IPs (or use 0.0.0.0/0)");
                 console.error("3. MongoDB Atlas cluster is running and accessible");
-                console.error("4. Connection string is correctly set in environment variables");
+                console.error("4. Connection string is correctly set in environment variables (no extra quotes/spaces)");
+                console.error("5. Try regenerating your connection string from MongoDB Atlas dashboard");
+                if (!isSrvConnection) {
+                    console.error("⚠️  CRITICAL: Your connection string should start with 'mongodb+srv://' for MongoDB Atlas!");
+                }
             }
             throw error;
         });
