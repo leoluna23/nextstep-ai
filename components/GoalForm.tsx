@@ -19,7 +19,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { savePlan } from "@/lib/planStore";
+import { initStateWithPlan } from "@/lib/planStore";
 import type { Plan } from "@/models/Plan";
 
 export default function GoalForm() {
@@ -73,7 +73,7 @@ export default function GoalForm() {
         const plan: Plan = data.plan;
 
         // MVP persistance
-        savePlan(plan);
+        initStateWithPlan(plan);
 
         // Navigate to the plan page to display the generated plan.
         router.push("/plan");

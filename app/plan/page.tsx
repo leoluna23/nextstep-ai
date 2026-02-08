@@ -10,89 +10,73 @@ Purpose:
 
 Why client component?
 - Uses useEffect (browser only storage) and client side navigation.
-
-Extend later:
-- Add task completion checkboxes that update the plan state and persist progress.
-- Add smarter selection logic for "Today's Next Step" (e.g. based on deadlines, user preferences, etc.)
-- Replace sessionStorage with MongoDB loading by planId in the URL.
 */
 
 import { useEffect, useMemo, useState } from "react";
-import { loadPlan, clearPlan } from "@/lib/planStore";
+import { clearState, loadState, saveState, type StoredState } from "@/lib/planStore";
+import { flattenPlan, getNextReadyTask, countTotalTasks, countCompleted } from "@/lib/planner";
+import ProgressMeter from "@/components/ProgressMeter";
 import type { Plan } from "@/models/Plan";
 import { useRouter } from "next/navigation";
 
-/* 
-Helper: flatten all tasks across weeks/milestones
-This makes it easy to select a "next" task in MVP.
-*/
-function flattenTasks(plan: Plan) {
-    const all: {
-        week: number;
-        milestone: string;
-        taskId: string;
-        text: string;
-        minutes: number;
-    }[] = [];
-
-    for (const w of plan.weeks){
-        for (const m of w.milestones){
-            for (const t of m.tasks){
-                all.push({
-                    week: w.week,
-                    milestone: m.name,
-                    taskId: t.id,
-                    text: t.text,
-                    minutes: t.minutes,
-                });
-            }
-        }
-    }
-    return all;
-}
-
+// Main component for the /plan page. Displays the plan and handles task completion state.
 export default function PlanPage() {
-    const router = useRouter();
-    const [plan, setPlan] = useState<Plan | null>(null);
+  const router = useRouter();
 
-    /* On page load:
-    - Attempt to laod the plan from sessionStorage.
-    - If none exists, redirect back to homepage.
-     */
-    useEffect(()=>{
-        const p = loadPlan();
-        if (!p) router.push("/");
-        else setPlan(p);
-    }, [router]);
-
-    /* Memoize the flattened tasks for easy access */
-    const tasks = useMemo(()=> plan ? flattenTasks(plan) : [], [plan]);
-
-    /* 
-    Todays next step logic
-    - Simply takes the first task in the plan
-    - Later: choose first incomplete task, respecting prerequisites, deadlines, and user preferences.
-    */
-   const todayTask = tasks[0];
-
-   // While laoding plan or redirecting, render nothing.
-   if (!plan) return null;
+  const [plan, setPlan] = useState<Plan | null>(null);
+  const [completedTaskIds, setCompletedTaskIds] = useState<string[]>([]);
 
 
+  // Load state (plan + completed list) from sessionStorage
+  useEffect(() => {
+    const state = loadState();
+    if (!state) {
+      router.push("/");
+      return;
+    }
+    setPlan(state.plan);
+    setCompletedTaskIds(state.completedTaskIds ?? []);
+  }, [router]);
+
+  const flat = useMemo(() => (plan ? flattenPlan(plan) : []), [plan]);
+
+  const completedSet = useMemo(() => new Set(completedTaskIds), [completedTaskIds]);
+
+  const total = useMemo(() => countTotalTasks(flat), [flat]);
+  const done = useMemo(() => countCompleted(flat, completedSet), [flat, completedSet]);
+
+  const todayTask = useMemo(() => getNextReadyTask(flat, completedSet), [flat, completedSet]);
+
+
+  // Persist the current plan and completion state to sessionStorage. Called whenever a task is toggled.
+  function persist(planToSave: Plan, completedToSave: string[]) {
+    const state: StoredState = { plan: planToSave, completedTaskIds: completedToSave };
+    saveState(state);
+  }
+
+
+ // Toggle a task's completion state, update local state and persist to sessionStorage
+  function toggleTask(taskId: string) {
+    if (!plan) return;
+
+    setCompletedTaskIds((prev) => {
+      const next = prev.includes(taskId) ? prev.filter((x) => x !== taskId) : [...prev, taskId];
+      persist(plan, next);
+      return next;
+    });
+  }
+
+  if (!plan) return null;
 
 
 
 
-
-
-
-   /* Render the plan! */
-   return (
+ // Style layout
+  return (
     <main style={{ padding: 24, fontFamily: "system-ui", maxWidth: 900 }}>
       <button
         onClick={() => {
-          // Clear stored plan and return to start.
-          clearPlan();
+          clearState();
           router.push("/");
         }}
         style={{ marginBottom: 16 }}
@@ -103,9 +87,11 @@ export default function PlanPage() {
       <h1 style={{ fontSize: 28, marginBottom: 6 }}>{plan.title}</h1>
       <p style={{ marginTop: 0 }}>{plan.summary}</p>
 
+      <ProgressMeter completed={done} total={total} />
+
       <section
         style={{
-          marginTop: 24,
+          marginTop: 16,
           padding: 16,
           border: "1px solid #ddd",
           borderRadius: 12,
@@ -115,13 +101,30 @@ export default function PlanPage() {
 
         {todayTask ? (
           <div>
-            <div style={{ fontWeight: 700 }}>{todayTask.text}</div>
-            <div style={{ opacity: 0.8 }}>
-              ~{todayTask.minutes} min • Week {todayTask.week} • {todayTask.milestone}
+            <div style={{ fontWeight: 800 }}>{todayTask.text}</div>
+            <div style={{ opacity: 0.8, marginTop: 4 }}>
+              ~{todayTask.minutes} min • Week {todayTask.week} • {todayTask.milestoneName}
             </div>
+            <div style={{ opacity: 0.8, marginTop: 6 }}>
+              Success criteria: {todayTask.successCriteria}
+            </div>
+
+            <button
+              onClick={() => toggleTask(todayTask.id)}
+              style={{
+                marginTop: 10,
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid #ccc",
+                cursor: "pointer",
+                fontWeight: 700,
+              }}
+            >
+              {completedSet.has(todayTask.id) ? "Mark as incomplete" : "Mark as done"}
+            </button>
           </div>
         ) : (
-          <div>No tasks found.</div>
+          <div style={{ fontWeight: 800 }}>You’ve completed everything. Summit reached 🏔️</div>
         )}
       </section>
 
@@ -142,15 +145,29 @@ export default function PlanPage() {
                   marginBottom: 10,
                 }}
               >
-                <div style={{ fontWeight: 700 }}>{m.name}</div>
+                <div style={{ fontWeight: 800 }}>{m.name}</div>
                 <div style={{ opacity: 0.85, marginBottom: 8 }}>{m.why}</div>
 
                 <ul style={{ margin: 0, paddingLeft: 18 }}>
-                  {m.tasks.map((t) => (
-                    <li key={t.id}>
-                      {t.text} <span style={{ opacity: 0.75 }}>({t.minutes} min)</span>
-                    </li>
-                  ))}
+                  {m.tasks.map((t) => {
+                    const checked = completedSet.has(t.id);
+
+                    return (
+                      <li key={t.id} style={{ marginBottom: 6 }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleTask(t.id)}
+                          />
+                          <span style={{ textDecoration: checked ? "line-through" : "none" }}>
+                            {t.text}{" "}
+                            <span style={{ opacity: 0.75 }}>({t.minutes} min)</span>
+                          </span>
+                        </label>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ))}

@@ -14,9 +14,9 @@ import { z } from 'zod';
 
 /* A single actionable task (small enough to complete in one sitting)*/
 export const TaskSchema = z.object({
-    id: z.string(), // Unique identifier for the task
-    text: z.string(), // The specific action that the user should take
-    minutes: z.number(), // Estimated time to complete the task in minutes
+    id: z.string().min(1), // Unique identifier for the task
+    text: z.string().min(1), // The specific action that the user should take
+    minutes: z.number().int().min(5).max(240), // Estimated time to complete the task in minutes
     /* Category of task. This is used for UI filtering, coloring and to ensure a balanced plan.
        (We keep the enum tight so Gemini doesn't create new categories.)*/
        category: z.enum([
@@ -27,24 +27,24 @@ export const TaskSchema = z.object({
         "apply",
        ]),
 
-    successCriteria: z.string(), // Clear criteria for what success looks like for this task
+    successCriteria: z.string().min(1), // Clear criteria for what success looks like for this task
     prereqs: z.array(z.string()).default([]), // List of task IDs that must be completed before this task
 });
 
 
 /* A milestone groups tasks into a coherent chunk of progress. */
 export const MilestoneSchema = z.object({
-    id: z.string(), // Unique identifier for the milestone
-    name: z.string(), // A short, descriptive name for the milestone
-    why: z.string(), // A brief explanation of why this milestone is important for the user's goal
-    tasks: z.array(TaskSchema), // List of tasks that belong to this milestone
+    id: z.string().min(1), // Unique identifier for the milestone
+    name: z.string().min(1), // A short, descriptive name for the milestone
+    why: z.string().min(1), // A brief explanation of why this milestone is important for the user's goal
+    tasks: z.array(TaskSchema).min(1), // List of tasks that belong to this milestone
 });
 
 /* The week plan: a theme plus multiple milestones */
 export const WeekSchema = z.object({
-    week: z.number(), // The week number in the overall plan (e.g., 1 for the first week)
-    theme: z.string(), // A concise theme that captures the main focus of this week 
-    milestones: z.array(MilestoneSchema), // List of milestones for this week
+    week: z.number().int().min(1).max(26), // The week number in the overall plan (e.g., 1 for the first week)
+    theme: z.string().min(1), // A concise theme that captures the main focus of this week 
+    milestones: z.array(MilestoneSchema).min(1), // List of milestones for this week
 });
 
 /* The full plan that the app stores, renders, and tracks progress against. */
