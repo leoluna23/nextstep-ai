@@ -42,6 +42,9 @@ const options: {
     tls?: boolean;
     tlsAllowInvalidCertificates?: boolean;
     tlsAllowInvalidHostnames?: boolean;
+    // Additional options that might help with SSL issues
+    directConnection?: boolean;
+    ssl?: boolean;
 } = {
     // Connection timeout settings (increase for production)
     serverSelectionTimeoutMS: 30000, // 30 seconds
@@ -54,8 +57,9 @@ const options: {
     maxPoolSize: 10,
     minPoolSize: 1,
     maxIdleTimeMS: 30000,
+    // For mongodb+srv://, don't set directConnection or TLS options
+    // The driver handles these automatically
     // For non-SRV connections only, configure TLS if needed
-    // mongodb+srv:// automatically handles TLS, so we don't set TLS options for it
     ...(isSrvConnection ? {} : (uri.includes("ssl=true") || uri.includes("tls=true") ? {
         tls: true,
         // In production, these should be false for security
@@ -91,10 +95,14 @@ function createClient() {
             if (error.message?.includes("SSL") || error.message?.includes("TLS") || error.code === "ERR_SSL_TLSV1_ALERT_INTERNAL_ERROR") {
                 console.error("SSL/TLS Error detected. Check:");
                 console.error(`1. Connection string format: ${isSrvConnection ? "✓ Using mongodb+srv://" : "✗ NOT using mongodb+srv:// - MongoDB Atlas requires mongodb+srv://"}`);
-                console.error("2. IP whitelist in MongoDB Atlas includes DigitalOcean IPs (or use 0.0.0.0/0)");
+                console.error("2. ⚠️  IP WHITELIST: Go to MongoDB Atlas → Network Access → Add IP Address");
+                console.error("   - Add '0.0.0.0/0' to allow all IPs (for testing)");
+                console.error("   - OR add DigitalOcean's IP ranges");
+                console.error("   - This is the MOST COMMON cause of SSL errors!");
                 console.error("3. MongoDB Atlas cluster is running and accessible");
                 console.error("4. Connection string is correctly set in environment variables (no extra quotes/spaces)");
                 console.error("5. Try regenerating your connection string from MongoDB Atlas dashboard");
+                console.error("6. Verify your MongoDB Atlas user has proper permissions");
                 if (!isSrvConnection) {
                     console.error("⚠️  CRITICAL: Your connection string should start with 'mongodb+srv://' for MongoDB Atlas!");
                 }
