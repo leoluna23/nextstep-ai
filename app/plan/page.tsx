@@ -9,7 +9,7 @@
  * - Computes progress + Today's Next Step locally
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Plan } from "@/models/Plan";
 import ProgressMeter from "@/components/ProgressMeter";
@@ -33,7 +33,7 @@ type LoadedDoc = {
 };
 
 // This page is responsible for displaying a generated plan, tracking task completion, and showing progress. It relies on the plan document structure defined in MongoDB and the related API endpoints for loading and updating the plan state.
-export default function PlanPage() {
+function PlanPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const planId = searchParams.get("id");
@@ -997,5 +997,30 @@ export default function PlanPage() {
         ))}
       </section>
     </main>
+  );
+}
+
+export default function PlanPage() {
+  return (
+    <Suspense fallback={
+      <main style={{ 
+        padding: "48px 24px", 
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "100vh",
+        background: "linear-gradient(to bottom, #e0f2fe 0%, #f0fdf4 100%)",
+        width: "100%"
+      }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 24, marginBottom: 12 }}>⛰️</div>
+          <div style={{ fontSize: 18, color: "#1e3a5f", marginBottom: 8, fontWeight: 600 }}>Loading your trail map...</div>
+          <div style={{ fontSize: 14, color: "#4a5568" }}>Preparing your journey</div>
+        </div>
+      </main>
+    }>
+      <PlanPageContent />
+    </Suspense>
   );
 }
