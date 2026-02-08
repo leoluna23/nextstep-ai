@@ -58,6 +58,8 @@ export async function GET(req: Request) {
       totalTasks: plan.plan?.weeks?.reduce((acc: number, w: any) => 
         acc + w.milestones?.reduce((acc2: number, m: any) => 
           acc2 + (m.tasks?.length || 0), 0), 0) || 0,
+      archived: plan.archived || false,
+      archivedAt: plan.archivedAt,
     }));
 
     return NextResponse.json({ plans: formattedPlans }, { status: 200 });

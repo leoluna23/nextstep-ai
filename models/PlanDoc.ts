@@ -26,4 +26,8 @@ export type PlanDoc = {
     // Core data
     plan: Plan;
     completedTaskIds: string[]; // List of task IDs that the user has completed
+    
+    // Archive status
+    archived?: boolean; // Whether this plan is archived (default: false)
+    archivedAt?: Date; // When the plan was archived
 };

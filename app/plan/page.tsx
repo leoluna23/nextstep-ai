@@ -18,6 +18,7 @@ import CopyLinkButton from "@/components/CopyLinkButton";
 import BackgroundPattern from "@/components/BackgroundPattern";
 import MotivationalSpeaker from "@/components/MotivationalSpeaker";
 import FocusCoach from "@/components/FocusCoach";
+import AudioExplanationButton from "@/components/AudioExplanationButton";
 
 // Loading plan document from MongoDB, including metadata and completion state
 type LoadedDoc = {
@@ -227,6 +228,23 @@ export default function PlanPage() {
 
   const progressPercentage = total > 0 ? Math.round((done / total) * 100) : 0;
 
+  // Determine progress milestone
+  const getProgressMilestone = (percentage: number): { name: string; icon: string; description: string } => {
+    if (percentage === 0) {
+      return { name: "Base Camp", icon: "🏕️", description: "Starting your journey" };
+    } else if (percentage < 25) {
+      return { name: "Base Camp", icon: "🏕️", description: "Preparing for the climb" };
+    } else if (percentage < 75) {
+      return { name: "Climbing", icon: "⛰️", description: "Making steady progress" };
+    } else if (percentage < 100) {
+      return { name: "Summit", icon: "🏔️", description: "Almost at the top" };
+    } else {
+      return { name: "Summit Reached", icon: "🏔️", description: "Journey complete!" };
+    }
+  };
+
+  const milestone = getProgressMilestone(progressPercentage);
+
   return (
     <main style={{ 
       padding: "32px 48px", 
@@ -282,19 +300,33 @@ export default function PlanPage() {
         <div style={{
           display: "flex",
           alignItems: "center",
+          justifyContent: "space-between",
           gap: 12,
           marginBottom: 16
         }}>
-          <div style={{ fontSize: 36 }}>⛰️</div>
-          <h1 style={{ 
-            fontSize: 36, 
-            margin: 0,
-            fontWeight: 800,
-            color: "#1e3a5f",
-            lineHeight: 1.2
-          }}>
-            {doc.plan.title}
-          </h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ fontSize: 36 }}>⛰️</div>
+            <h1 style={{ 
+              fontSize: 36, 
+              margin: 0,
+              fontWeight: 800,
+              color: "#1e3a5f",
+              lineHeight: 1.2
+            }}>
+              {doc.plan.title}
+            </h1>
+          </div>
+          <AudioExplanationButton
+            type="plan"
+            data={{
+              title: doc.plan.title,
+              summary: doc.plan.summary,
+              weeks: doc.plan.weeks,
+              totalTasks: total,
+            }}
+            goalText={doc.goalText}
+            size="medium"
+          />
         </div>
         <p style={{ 
           marginTop: 0,
@@ -328,6 +360,49 @@ export default function PlanPage() {
               {done} / {total} waypoints
             </div>
           </div>
+
+          {/* Progress Milestone */}
+          <div style={{
+            marginBottom: 16,
+            padding: 16,
+            backgroundColor: "white",
+            border: "2px solid #059669",
+            borderRadius: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: 12
+          }}>
+            <div style={{
+              fontSize: 32,
+              lineHeight: 1
+            }}>
+              {milestone.icon}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontSize: 18,
+                fontWeight: 800,
+                color: "#1e3a5f",
+                marginBottom: 4
+              }}>
+                {milestone.name}
+              </div>
+              <div style={{
+                fontSize: 13,
+                color: "#6b7280"
+              }}>
+                {milestone.description}
+              </div>
+            </div>
+            <div style={{
+              fontSize: 24,
+              fontWeight: 800,
+              color: "#059669"
+            }}>
+              {progressPercentage}%
+            </div>
+          </div>
+
           <div style={{
             width: "100%",
             height: 24,
@@ -527,10 +602,24 @@ export default function PlanPage() {
           borderLeft: "6px solid #f59e0b",
           boxShadow: "0 4px 12px rgba(245,158,11,0.2)"
         }}>
-          <h2 style={{ marginTop: 0, marginBottom: 20, fontSize: 22, color: "#92400e", display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 28 }}>🎯</span>
-            <span>Next Waypoint</span>
-          </h2>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+            <h2 style={{ margin: 0, fontSize: 22, color: "#92400e", display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 28 }}>🎯</span>
+              <span>Next Waypoint</span>
+            </h2>
+            {todayTask && (
+              <AudioExplanationButton
+                type="task"
+                data={{
+                  ...todayTask,
+                  milestoneName: todayTask.milestoneName,
+                  weekNumber: todayTask.week,
+                }}
+                goalText={doc.goalText}
+                size="medium"
+              />
+            )}
+          </div>
 
           {todayTask ? (
             <div>
@@ -659,18 +748,31 @@ export default function PlanPage() {
               {w.week}
             </div>
 
-            <h3 style={{ 
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
               marginBottom: 20,
-              fontSize: 24,
-              fontWeight: 800,
-              color: "#1e3a5f",
               paddingLeft: 24,
               paddingBottom: 16,
               borderBottom: "3px solid #059669"
             }}>
-              <span style={{ marginRight: 8 }}>🏕️</span>
-              Week {w.week}: {w.theme}
-            </h3>
+              <h3 style={{ 
+                margin: 0,
+                fontSize: 24,
+                fontWeight: 800,
+                color: "#1e3a5f"
+              }}>
+                <span style={{ marginRight: 8 }}>🏕️</span>
+                Week {w.week}: {w.theme}
+              </h3>
+              <AudioExplanationButton
+                type="week"
+                data={w}
+                goalText={doc.goalText}
+                size="small"
+              />
+            </div>
 
             {w.milestones.map((m, milestoneIndex) => (
               <div
@@ -775,16 +877,27 @@ export default function PlanPage() {
                             }}
                           />
                           <div style={{ flex: 1 }}>
-                            <span style={{ 
-                              textDecoration: checked ? "line-through" : "none",
-                              color: checked ? "#9ca3af" : hasUnmetPrereqs ? "#92400e" : "#1e3a5f",
-                              fontSize: 16,
-                              lineHeight: 1.6,
-                              display: "block",
-                              fontWeight: checked ? 400 : 500
-                            }}>
-                              {t.text}
-                            </span>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                              <span style={{ 
+                                textDecoration: checked ? "line-through" : "none",
+                                color: checked ? "#9ca3af" : hasUnmetPrereqs ? "#92400e" : "#1e3a5f",
+                                fontSize: 16,
+                                lineHeight: 1.6,
+                                fontWeight: checked ? 400 : 500
+                              }}>
+                                {t.text}
+                              </span>
+                              <AudioExplanationButton
+                                type="task"
+                                data={{
+                                  ...t,
+                                  milestoneName: m.name,
+                                  weekNumber: w.week,
+                                }}
+                                goalText={doc.goalText}
+                                size="small"
+                              />
+                            </div>
                             
                             {/* Prerequisites display */}
                             {prereqs.length > 0 && (

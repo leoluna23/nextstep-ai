@@ -33,6 +33,8 @@ type PlanSummary = {
   updatedAt: Date;
   completedTaskIds: string[];
   totalTasks: number;
+  archived?: boolean;
+  archivedAt?: Date;
 };
 
 export default function HomePage() {
@@ -237,28 +239,52 @@ export default function HomePage() {
               Welcome back{user.name ? `, ${user.name}` : ""}! ({user.email})
             </p>
           </div>
-          <button
-            onClick={handleLogout}
-            style={{
-              padding: "10px 20px",
-              borderRadius: 0,
-              border: "1px solid #dc2626",
-              backgroundColor: "#fef2f2",
-              color: "#dc2626",
-              cursor: "pointer",
-              fontWeight: 600,
-              fontSize: 14,
-              transition: "all 0.2s"
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = "#fee2e2";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = "#fef2f2";
-            }}
-          >
-            Logout
-          </button>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <button
+              onClick={() => router.push("/archived")}
+              style={{
+                padding: "10px 20px",
+                borderRadius: 0,
+                border: "1px solid #9ca3af",
+                backgroundColor: "#f3f4f6",
+                color: "#4b5563",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: 14,
+                transition: "all 0.2s"
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = "#e5e7eb";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = "#f3f4f6";
+              }}
+            >
+              📦 Archived Trails
+            </button>
+            <button
+              onClick={handleLogout}
+              style={{
+                padding: "10px 20px",
+                borderRadius: 0,
+                border: "1px solid #dc2626",
+                backgroundColor: "#fef2f2",
+                color: "#dc2626",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: 14,
+                transition: "all 0.2s"
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = "#fee2e2";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = "#fef2f2";
+              }}
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         <div style={{
@@ -267,7 +293,7 @@ export default function HomePage() {
           gap: 24,
           width: "100%"
         }}>
-          {/* User's Plans */}
+          {/* Ongoing Trails */}
           <div style={{
             backgroundColor: "white",
             borderRadius: 0,
@@ -280,104 +306,302 @@ export default function HomePage() {
               fontWeight: 800,
               color: "#1e3a5f",
               marginTop: 0,
-              marginBottom: 24
+              marginBottom: 24,
+              display: "flex",
+              alignItems: "center",
+              gap: 8
             }}>
-              🗺️ Your Trail Maps
+              <span>⛰️</span>
+              <span>Ongoing Trails</span>
             </h2>
 
             {plansLoading ? (
               <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>
-                ⏳ Loading your plans...
+                ⏳ Loading your trails...
               </div>
-            ) : plans.length === 0 ? (
-              <div style={{ 
-                padding: 32, 
-                textAlign: "center",
-                color: "#6b7280",
-                backgroundColor: "#f9fafb",
-                border: "2px dashed #d1d5db"
-              }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>🗺️</div>
-                <p style={{ margin: 0, fontSize: 16 }}>
-                  No trail maps yet. Create your first one below!
-                </p>
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {plans.map((plan) => {
-                  const completedCount = plan.completedTaskIds.length;
-                  const progress = plan.totalTasks > 0 
-                    ? Math.round((completedCount / plan.totalTasks) * 100) 
-                    : 0;
+            ) : (() => {
+              const ongoingPlans = plans.filter(plan => {
+                const completedCount = plan.completedTaskIds.length;
+                const progress = plan.totalTasks > 0 
+                  ? Math.round((completedCount / plan.totalTasks) * 100) 
+                  : 0;
+                return progress < 100;
+              });
 
-                  return (
-                    <div
-                      key={plan._id}
-                      onClick={() => router.push(`/plan?id=${plan._id}`)}
-                      style={{
-                        padding: 20,
-                        border: "2px solid #059669",
-                        backgroundColor: "#f0fdf4",
-                        cursor: "pointer",
-                        transition: "all 0.2s"
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "#dcfce7";
-                        e.currentTarget.style.borderColor = "#059669";
-                        e.currentTarget.style.transform = "translateX(4px)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "#f0fdf4";
-                        e.currentTarget.style.borderColor = "#059669";
-                        e.currentTarget.style.transform = "translateX(0)";
-                      }}
-                    >
-                      <div style={{ 
-                        fontWeight: 700, 
-                        fontSize: 18,
-                        color: "#1e3a5f",
-                        marginBottom: 8
-                      }}>
-                        {plan.plan.title}
-                      </div>
-                      <div style={{ 
-                        fontSize: 14,
-                        color: "#4a5568",
-                        marginBottom: 12
-                      }}>
-                        {plan.goalText}
-                      </div>
-                      <div style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        fontSize: 12,
-                        color: "#6b7280"
-                      }}>
-                        <span>📍 {completedCount}/{plan.totalTasks} waypoints</span>
-                        <span>{progress}% complete</span>
-                      </div>
-                      <div style={{
-                        width: "100%",
-                        height: 6,
-                        backgroundColor: "#d1fae5",
-                        marginTop: 8
-                      }}>
+              if (ongoingPlans.length === 0) {
+                return (
+                  <div style={{ 
+                    padding: 32, 
+                    textAlign: "center",
+                    color: "#6b7280",
+                    backgroundColor: "#f9fafb",
+                    border: "2px dashed #d1d5db"
+                  }}>
+                    <div style={{ fontSize: 32, marginBottom: 12 }}>⛰️</div>
+                    <p style={{ margin: 0, fontSize: 16 }}>
+                      No ongoing trails. Start a new journey below!
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {ongoingPlans.map((plan) => {
+                    const completedCount = plan.completedTaskIds.length;
+                    const progress = plan.totalTasks > 0 
+                      ? Math.round((completedCount / plan.totalTasks) * 100) 
+                      : 0;
+
+                    return (
+                      <div
+                        key={plan._id}
+                        onClick={() => router.push(`/plan?id=${plan._id}`)}
+                        style={{
+                          padding: 20,
+                          border: "2px solid #059669",
+                          backgroundColor: "#f0fdf4",
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "#dcfce7";
+                          e.currentTarget.style.borderColor = "#059669";
+                          e.currentTarget.style.transform = "translateX(4px)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "#f0fdf4";
+                          e.currentTarget.style.borderColor = "#059669";
+                          e.currentTarget.style.transform = "translateX(0)";
+                        }}
+                      >
+                        <div style={{ 
+                          fontWeight: 700, 
+                          fontSize: 18,
+                          color: "#1e3a5f",
+                          marginBottom: 8
+                        }}>
+                          {plan.plan.title}
+                        </div>
+                        <div style={{ 
+                          fontSize: 14,
+                          color: "#4a5568",
+                          marginBottom: 12
+                        }}>
+                          {plan.goalText}
+                        </div>
                         <div style={{
-                          width: `${progress}%`,
-                          height: "100%",
-                          backgroundColor: "#059669",
-                          transition: "width 0.3s"
-                        }} />
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          fontSize: 12,
+                          color: "#6b7280"
+                        }}>
+                          <span>📍 {completedCount}/{plan.totalTasks} waypoints</span>
+                          <span>{progress}% complete</span>
+                        </div>
+                        <div style={{
+                          width: "100%",
+                          height: 6,
+                          backgroundColor: "#d1fae5",
+                          marginTop: 8
+                        }}>
+                          <div style={{
+                            width: `${progress}%`,
+                            height: "100%",
+                            backgroundColor: "#059669",
+                            transition: "width 0.3s"
+                          }} />
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
 
-          {/* Goal Form */}
+          {/* Completed Trails */}
+          <div style={{
+            backgroundColor: "white",
+            borderRadius: 0,
+            padding: 32,
+            boxShadow: "0 12px 32px rgba(0,0,0,0.15)",
+            border: "3px solid #f59e0b"
+          }}>
+            <h2 style={{
+              fontSize: 24,
+              fontWeight: 800,
+              color: "#1e3a5f",
+              marginTop: 0,
+              marginBottom: 24,
+              display: "flex",
+              alignItems: "center",
+              gap: 8
+            }}>
+              <span>🏔️</span>
+              <span>Completed Trails</span>
+            </h2>
+
+            {plansLoading ? (
+              <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>
+                ⏳ Loading your trails...
+              </div>
+            ) : (() => {
+              const completedPlans = plans.filter(plan => {
+                const completedCount = plan.completedTaskIds.length;
+                const progress = plan.totalTasks > 0 
+                  ? Math.round((completedCount / plan.totalTasks) * 100) 
+                  : 0;
+                // Only show non-archived completed plans
+                return progress === 100 && !plan.archived;
+              });
+
+              if (completedPlans.length === 0) {
+                return (
+                  <div style={{ 
+                    padding: 32, 
+                    textAlign: "center",
+                    color: "#6b7280",
+                    backgroundColor: "#f9fafb",
+                    border: "2px dashed #d1d5db"
+                  }}>
+                    <div style={{ fontSize: 32, marginBottom: 12 }}>🏔️</div>
+                    <p style={{ margin: 0, fontSize: 16 }}>
+                      No completed trails yet. Keep climbing!
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {completedPlans.map((plan) => {
+                    const completedCount = plan.completedTaskIds.length;
+                    const progress = 100;
+
+                    return (
+                      <div
+                        key={plan._id}
+                        style={{
+                          padding: 20,
+                          border: "2px solid #f59e0b",
+                          backgroundColor: "#fef3c7",
+                          transition: "all 0.2s",
+                          opacity: 0.9
+                        }}
+                      >
+                        <div
+                          onClick={() => router.push(`/plan?id=${plan._id}`)}
+                          style={{
+                            cursor: "pointer",
+                            marginBottom: 12
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.opacity = "1";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.opacity = "0.9";
+                          }}
+                        >
+                          <div style={{ 
+                            fontWeight: 700, 
+                            fontSize: 18,
+                            color: "#1e3a5f",
+                            marginBottom: 8,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8
+                          }}>
+                            <span>🏔️</span>
+                            <span>{plan.plan.title}</span>
+                          </div>
+                          <div style={{ 
+                            fontSize: 14,
+                            color: "#4a5568",
+                            marginBottom: 12
+                          }}>
+                            {plan.goalText}
+                          </div>
+                          <div style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            fontSize: 12,
+                            color: "#92400e",
+                            fontWeight: 600
+                          }}>
+                            <span>✅ {completedCount}/{plan.totalTasks} waypoints completed</span>
+                            <span>🏔️ Summit Reached!</span>
+                          </div>
+                          <div style={{
+                            width: "100%",
+                            height: 6,
+                            backgroundColor: "#fde68a",
+                            marginTop: 8
+                          }}>
+                            <div style={{
+                              width: "100%",
+                              height: "100%",
+                              backgroundColor: "#f59e0b",
+                              transition: "width 0.3s"
+                            }} />
+                          </div>
+                        </div>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              const res = await fetch("/api/plan/archive", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ planId: plan._id, archived: true }),
+                              });
+                              if (res.ok) {
+                                loadPlans();
+                              }
+                            } catch (err) {
+                              console.error("Failed to archive:", err);
+                            }
+                          }}
+                          style={{
+                            width: "100%",
+                            padding: "8px 16px",
+                            borderRadius: 0,
+                            border: "1px solid #6b7280",
+                            backgroundColor: "#f3f4f6",
+                            color: "#4b5563",
+                            fontWeight: 600,
+                            fontSize: 13,
+                            cursor: "pointer",
+                            transition: "all 0.2s",
+                            marginTop: 12
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.backgroundColor = "#e5e7eb";
+                            e.currentTarget.style.borderColor = "#4b5563";
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.backgroundColor = "#f3f4f6";
+                            e.currentTarget.style.borderColor = "#6b7280";
+                          }}
+                        >
+                          📦 Archive Trail
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+
+        {/* Goal Form - Full Width Below */}
+        <div style={{
+          width: "100%",
+          marginTop: 24
+        }}>
           <div style={{
             backgroundColor: "white",
             borderRadius: 0,
