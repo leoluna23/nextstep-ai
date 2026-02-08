@@ -60,7 +60,7 @@ export function generateMotivationalMessage(context: {
   if (progress === 0) {
     return `Welcome to your journey! You're about to embark on an incredible path toward ${goalText || "your goal"}. Remember, every great achievement starts with a single step. You've got this!`;
   } else if (progress < 25) {
-    return `Great start! You've completed ${completedTasks} of ${totalTasks} waypoints. You're building momentum, and that's what matters. Keep pushing forward, one step at a time.`;
+    return `Great start! You've completed ${completedTasks} of ${totalTasks} steps. You're building momentum, and that's what matters. Keep pushing forward, one step at a time.`;
   } else if (progress < 50) {
     return `You're making excellent progress! ${progress}% complete. You're proving to yourself that you can do this. ${nextTask ? `Your next step: ${nextTask}.` : ""} Keep climbing!`;
   } else if (progress < 75) {
@@ -68,7 +68,7 @@ export function generateMotivationalMessage(context: {
   } else if (progress < 100) {
     return `You're in the final stretch! ${progress}% complete. The summit is in sight. Every step you take now brings you closer to your goal. ${nextTask ? `One more push: ${nextTask}.` : ""} Finish strong!`;
   } else {
-    return `Congratulations! You've reached the summit! You've completed all ${totalTasks} waypoints. This is a moment to celebrate. You've shown incredible dedication and perseverance. Well done!`;
+    return `Congratulations! You've reached the summit! You've completed all ${totalTasks} steps. This is a moment to celebrate. You've shown incredible dedication and perseverance. Well done!`;
   }
 }
 

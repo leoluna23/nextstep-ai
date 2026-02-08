@@ -142,7 +142,7 @@ export default function PlanPage() {
       setFeedback("");
       
       // Show success message
-      alert(`Trail rerouted! Replaced ${data.replacedCount} waypoints with ${data.newCount} new ones.`);
+      alert(`Trail rerouted! Replaced ${data.replacedCount} steps with ${data.newCount} new ones.`);
     } catch (e: any) {
       setErr(e?.message || "Failed to replan");
       alert(e?.message || "Failed to replan");
@@ -357,7 +357,7 @@ export default function PlanPage() {
               🗺️ Trail Progress
             </div>
             <div style={{ fontWeight: 700, color: "#059669", fontSize: 18 }}>
-              {done} / {total} waypoints
+              {done} / {total} steps
             </div>
           </div>
 
@@ -505,7 +505,7 @@ export default function PlanPage() {
               🗺️ Reroute Your Trail
             </h3>
             <p style={{ fontSize: 14, color: "#78350f", marginBottom: 20, lineHeight: 1.5 }}>
-              Adjust your path by replacing incomplete waypoints with new ones. Completed checkpoints will remain.
+              Adjust your path by replacing incomplete steps with new ones. Completed steps will remain.
             </p>
             
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -542,7 +542,7 @@ export default function PlanPage() {
                 <textarea
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="e.g., Previous waypoints were too challenging, need more practice-focused routes"
+                  placeholder="e.g., Previous steps were too challenging, need more practice-focused routes"
                   rows={2}
                   style={{
                     width: "100%",
@@ -604,8 +604,8 @@ export default function PlanPage() {
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
             <h2 style={{ margin: 0, fontSize: 22, color: "#92400e", display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 28 }}>🎯</span>
-              <span>Next Waypoint</span>
+              <span style={{ fontSize: 28 }}></span>
+              <span>Take Your Next Step</span>
             </h2>
             {todayTask && (
               <AudioExplanationButton
@@ -642,7 +642,7 @@ export default function PlanPage() {
               }}>
                 <span>⏱️ ~{todayTask.minutes} min</span>
                 <span>📅 Week {todayTask.week}</span>
-                <span>📍 {todayTask.milestoneName}</span>
+                <span>🏕️ {todayTask.milestoneName}</span>
               </div>
               <div style={{ 
                 marginBottom: 20,
@@ -653,7 +653,7 @@ export default function PlanPage() {
                 borderRadius: 0,
                 border: "1px solid #fbbf24"
               }}>
-                <strong>📍 Checkpoint:</strong> {todayTask.successCriteria}
+                <strong>🏁 Success Criteria:</strong> {todayTask.successCriteria}
               </div>
 
               <button
@@ -677,7 +677,7 @@ export default function PlanPage() {
                   e.currentTarget.style.backgroundColor = completedSet.has(todayTask.id) ? "#6b7280" : "#059669";
                 }}
               >
-                {completedSet.has(todayTask.id) ? "↩️ Mark as Incomplete" : "✓ Reach Checkpoint"}
+                {completedSet.has(todayTask.id) ? "↩️ Mark as Incomplete" : "✓ Complete Step"}
               </button>
             </div>
           ) : (

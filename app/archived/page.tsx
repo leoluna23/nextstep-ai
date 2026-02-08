@@ -307,7 +307,7 @@ export default function ArchivedPage() {
                         fontSize: 12,
                         color: "#6b7280"
                       }}>
-                        <span>✅ {completedCount}/{plan.totalTasks} waypoints completed</span>
+                        <span>✅ {completedCount}/{plan.totalTasks} steps completed</span>
                         <span>📦 Archived</span>
                       </div>
                     </div>

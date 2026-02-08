@@ -106,7 +106,7 @@ Goal: ${input.goalText}
 Plan Title: ${input.title}
 Summary: ${input.summary}
 Duration: ${input.totalWeeks} weeks
-Total tasks: ${input.totalTasks} waypoints
+Total tasks: ${input.totalTasks} steps
 
 Provide a clear, encouraging overview of this plan. Explain:
 1. What the plan covers

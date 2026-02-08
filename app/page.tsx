@@ -397,7 +397,7 @@ export default function HomePage() {
                           fontSize: 12,
                           color: "#6b7280"
                         }}>
-                          <span>📍 {completedCount}/{plan.totalTasks} waypoints</span>
+                          <span>👣 {completedCount}/{plan.totalTasks} steps</span>
                           <span>{progress}% complete</span>
                         </div>
                         <div style={{
@@ -531,7 +531,7 @@ export default function HomePage() {
                             color: "#92400e",
                             fontWeight: 600
                           }}>
-                            <span>✅ {completedCount}/{plan.totalTasks} waypoints completed</span>
+                            <span>✅ {completedCount}/{plan.totalTasks} steps completed</span>
                             <span>🏔️ Summit Reached!</span>
                           </div>
                           <div style={{
