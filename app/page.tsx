@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import GoalForm from "@/components/GoalForm";
 import LoginForm from "@/components/LoginForm";
 import SignupForm from "@/components/SignupForm";
+import BackgroundPattern from "@/components/BackgroundPattern";
 
 type User = {
   _id: string;
@@ -122,19 +123,23 @@ export default function HomePage() {
         background: "linear-gradient(to bottom, #e0f2fe 0%, #f0fdf4 50%, #fef3c7 100%)",
         minHeight: "100vh",
         width: "100%",
-        boxSizing: "border-box"
+        boxSizing: "border-box",
+        position: "relative"
       }}>
+        <BackgroundPattern color="#059669" opacity={0.15} />
         <div style={{
           maxWidth: 500,
           margin: "0 auto",
-          width: "100%"
+          width: "100%",
+          position: "relative",
+          zIndex: 1
         }}>
           <div style={{
             backgroundColor: "white",
             borderRadius: 0,
             padding: 48,
             boxShadow: "0 12px 32px rgba(0,0,0,0.15)",
-            border: "3px solid #86efac"
+            border: "3px solid #059669"
           }}>
             <div style={{
               textAlign: "center",
@@ -192,12 +197,16 @@ export default function HomePage() {
       background: "linear-gradient(to bottom, #e0f2fe 0%, #f0fdf4 50%, #fef3c7 100%)",
       minHeight: "100vh",
       width: "100%",
-      boxSizing: "border-box"
+      boxSizing: "border-box",
+      position: "relative"
     }}>
+      <BackgroundPattern color="#059669" opacity={0.12} />
       <div style={{
         maxWidth: 1800,
         margin: "0 auto",
-        width: "100%"
+        width: "100%",
+        position: "relative",
+        zIndex: 1
       }}>
         {/* Header with user info and logout */}
         <div style={{
@@ -205,7 +214,7 @@ export default function HomePage() {
           borderRadius: 0,
           padding: 24,
           boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-          border: "2px solid #86efac",
+          border: "2px solid #059669",
           marginBottom: 24,
           display: "flex",
           justifyContent: "space-between",
@@ -248,7 +257,7 @@ export default function HomePage() {
               e.currentTarget.style.backgroundColor = "#fef2f2";
             }}
           >
-            🚪 Logout
+            Logout
           </button>
         </div>
 
@@ -264,7 +273,7 @@ export default function HomePage() {
             borderRadius: 0,
             padding: 32,
             boxShadow: "0 12px 32px rgba(0,0,0,0.15)",
-            border: "3px solid #86efac"
+            border: "3px solid #059669"
           }}>
             <h2 style={{
               fontSize: 24,
@@ -307,7 +316,7 @@ export default function HomePage() {
                       onClick={() => router.push(`/plan?id=${plan._id}`)}
                       style={{
                         padding: 20,
-                        border: "2px solid #86efac",
+                        border: "2px solid #059669",
                         backgroundColor: "#f0fdf4",
                         cursor: "pointer",
                         transition: "all 0.2s"
@@ -319,7 +328,7 @@ export default function HomePage() {
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = "#f0fdf4";
-                        e.currentTarget.style.borderColor = "#86efac";
+                        e.currentTarget.style.borderColor = "#059669";
                         e.currentTarget.style.transform = "translateX(0)";
                       }}
                     >
@@ -374,7 +383,7 @@ export default function HomePage() {
             borderRadius: 0,
             padding: 32,
             boxShadow: "0 12px 32px rgba(0,0,0,0.15)",
-            border: "3px solid #86efac"
+            border: "3px solid #059669"
           }}>
             <div style={{
               textAlign: "center",

@@ -132,7 +132,7 @@ export default function GoalForm({ onSuccess }: GoalFormProps) {
                 width: "100%", 
                 padding: 14,
                 borderRadius: 0,
-                border: "2px solid #86efac",
+                border: "2px solid #059669",
                 fontSize: 15,
                 fontFamily: "inherit",
                 resize: "vertical",
@@ -145,7 +145,7 @@ export default function GoalForm({ onSuccess }: GoalFormProps) {
                 e.currentTarget.style.backgroundColor = "white";
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = "#86efac";
+                e.currentTarget.style.borderColor = "#059669";
                 e.currentTarget.style.backgroundColor = "#fafafa";
               }}
             />
@@ -169,7 +169,7 @@ export default function GoalForm({ onSuccess }: GoalFormProps) {
                 width: "100%", 
                 padding: 14,
                 borderRadius: 0,
-                border: "2px solid #86efac",
+                border: "2px solid #059669",
                 fontSize: 15,
                 fontFamily: "inherit",
                 transition: "border-color 0.2s",
@@ -181,7 +181,7 @@ export default function GoalForm({ onSuccess }: GoalFormProps) {
                 e.currentTarget.style.backgroundColor = "white";
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = "#86efac";
+                e.currentTarget.style.borderColor = "#059669";
                 e.currentTarget.style.backgroundColor = "#fafafa";
               }}
             />
@@ -212,7 +212,7 @@ export default function GoalForm({ onSuccess }: GoalFormProps) {
                   width: "100%", 
                   padding: 14,
                   borderRadius: 0,
-                  border: "2px solid #86efac",
+                  border: "2px solid #059669",
                   fontSize: 15,
                   fontFamily: "inherit",
                   transition: "border-color 0.2s",
@@ -224,7 +224,7 @@ export default function GoalForm({ onSuccess }: GoalFormProps) {
                   e.currentTarget.style.backgroundColor = "white";
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "#86efac";
+                  e.currentTarget.style.borderColor = "#059669";
                   e.currentTarget.style.backgroundColor = "#fafafa";
                 }}
               />
@@ -250,7 +250,7 @@ export default function GoalForm({ onSuccess }: GoalFormProps) {
                   width: "100%", 
                   padding: 14,
                   borderRadius: 0,
-                  border: "2px solid #86efac",
+                  border: "2px solid #059669",
                   fontSize: 15,
                   fontFamily: "inherit",
                   transition: "border-color 0.2s",
@@ -262,7 +262,7 @@ export default function GoalForm({ onSuccess }: GoalFormProps) {
                   e.currentTarget.style.backgroundColor = "white";
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "#86efac";
+                  e.currentTarget.style.borderColor = "#059669";
                   e.currentTarget.style.backgroundColor = "#fafafa";
                 }}
               />
@@ -285,7 +285,7 @@ export default function GoalForm({ onSuccess }: GoalFormProps) {
                   width: "100%", 
                   padding: 14,
                   borderRadius: 0,
-                  border: "2px solid #86efac",
+                  border: "2px solid #059669",
                   fontSize: 15,
                   fontFamily: "inherit",
                   backgroundColor: "#fafafa",
@@ -298,7 +298,7 @@ export default function GoalForm({ onSuccess }: GoalFormProps) {
                   e.currentTarget.style.backgroundColor = "white";
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "#86efac";
+                  e.currentTarget.style.borderColor = "#059669";
                   e.currentTarget.style.backgroundColor = "#fafafa";
                 }}
               >

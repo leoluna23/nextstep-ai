@@ -13,8 +13,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Plan } from "@/models/Plan";
 import ProgressMeter from "@/components/ProgressMeter";
-import { flattenPlan, getNextReadyTask, countTotalTasks, countCompleted } from "@/lib/planner";
+import { flattenPlan, getNextReadyTask, countTotalTasks, countCompleted, type FlatTask } from "@/lib/planner";
 import CopyLinkButton from "@/components/CopyLinkButton";
+import BackgroundPattern from "@/components/BackgroundPattern";
+import MotivationalSpeaker from "@/components/MotivationalSpeaker";
+import FocusCoach from "@/components/FocusCoach";
 
 // Loading plan document from MongoDB, including metadata and completion state
 type LoadedDoc = {
@@ -67,6 +70,13 @@ export default function PlanPage() {
 
   const flat = useMemo(() => (doc ? flattenPlan(doc.plan) : []), [doc]);
   const completedSet = useMemo(() => new Set(doc?.completedTaskIds ?? []), [doc]);
+
+  // Create a map of task ID to task for looking up prerequisite tasks
+  const taskMap = useMemo(() => {
+    const map = new Map<string, FlatTask>();
+    flat.forEach(task => map.set(task.id, task));
+    return map;
+  }, [flat]);
 
   const total = useMemo(() => countTotalTasks(flat), [flat]);
   const done = useMemo(() => countCompleted(flat, completedSet), [flat, completedSet]);
@@ -225,8 +235,10 @@ export default function PlanPage() {
       margin: 0,
       background: "linear-gradient(to bottom, #e0f2fe 0%, #f0fdf4 50%, #fef3c7 100%)",
       minHeight: "100vh",
-      width: "100%"
+      width: "100%",
+      position: "relative"
     }}>
+      <BackgroundPattern color="#059669" opacity={0.12} />
       <div style={{ 
         backgroundColor: "white",
         borderRadius: 0,
@@ -237,7 +249,9 @@ export default function PlanPage() {
         maxWidth: 1800,
         marginLeft: "auto",
         marginRight: "auto",
-        width: "100%"
+        width: "100%",
+        position: "relative",
+        zIndex: 1
       }}>
         <button 
           onClick={() => router.push("/")} 
@@ -299,7 +313,7 @@ export default function PlanPage() {
           padding: 20,
           backgroundColor: "#f0fdf4",
           borderRadius: 0,
-          border: "2px solid #86efac"
+          border: "2px solid #059669"
         }}>
           <div style={{
             display: "flex",
@@ -320,7 +334,7 @@ export default function PlanPage() {
             backgroundColor: "#d1fae5",
             borderRadius: 0,
             overflow: "hidden",
-            border: "2px solid #86efac",
+            border: "2px solid #059669",
             position: "relative"
           }}>
             <div style={{
@@ -360,9 +374,19 @@ export default function PlanPage() {
           gap: 12, 
           marginTop: 16, 
           flexWrap: "wrap",
-          marginBottom: 24
+          marginBottom: 24,
+          alignItems: "center"
         }}>
           <CopyLinkButton url={shareUrl} />
+          <MotivationalSpeaker 
+            context={{
+              progress: progressPercentage,
+              completedTasks: done,
+              totalTasks: total,
+              nextTask: todayTask?.text,
+              goalText: doc.goalText
+            }}
+          />
           <button
             onClick={() => setShowReplanForm(!showReplanForm)}
             style={{
@@ -568,17 +592,26 @@ export default function PlanPage() {
               </button>
             </div>
           ) : (
-            <div style={{ 
-              fontWeight: 700, 
-              fontSize: 22,
-              color: "#059669",
-              textAlign: "center",
-              padding: 32
-            }}>
-              🏔️ Summit Reached! You've completed your journey!
-            </div>
-          )}
+              <div style={{ 
+                fontWeight: 700, 
+                fontSize: 22,
+                color: "#059669",
+                textAlign: "center",
+                padding: 32
+              }}>
+                🏔️ Summit Reached! You've completed your journey!
+              </div>
+            )}
         </section>
+
+        {/* Focus Coach */}
+        {todayTask && (
+          <FocusCoach 
+            task={todayTask}
+            goalText={doc.goalText}
+            onTaskComplete={() => toggleTask(todayTask.id)}
+          />
+        )}
       </div>
 
       <section style={{ 
@@ -589,7 +622,9 @@ export default function PlanPage() {
         maxWidth: 1800,
         marginLeft: "auto",
         marginRight: "auto",
-        width: "100%"
+        width: "100%",
+        position: "relative",
+        zIndex: 1
       }}>
         {doc.plan.weeks.map((w, weekIndex) => (
           <div 
@@ -631,7 +666,7 @@ export default function PlanPage() {
               color: "#1e3a5f",
               paddingLeft: 24,
               paddingBottom: 16,
-              borderBottom: "3px solid #86efac"
+              borderBottom: "3px solid #059669"
             }}>
               <span style={{ marginRight: 8 }}>🏕️</span>
               Week {w.week}: {w.theme}
@@ -647,11 +682,11 @@ export default function PlanPage() {
                   marginBottom: 20,
                   backgroundColor: "#fafafa",
                   transition: "all 0.2s",
-                  borderLeft: "4px solid #86efac"
+                  borderLeft: "4px solid #059669"
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.12)";
-                  e.currentTarget.style.borderColor = "#86efac";
+                  e.currentTarget.style.borderColor = "#059669";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.boxShadow = "none";
@@ -685,6 +720,12 @@ export default function PlanPage() {
                   {m.tasks.map((t) => {
                     const checked = completedSet.has(t.id);
                     const category = categoryColors[t.category] || categoryColors.research;
+                    
+                    // Check prerequisite status
+                    const prereqs = t.prereqs || [];
+                    const unmetPrereqs = prereqs.filter(prereqId => !completedSet.has(prereqId));
+                    const hasUnmetPrereqs = unmetPrereqs.length > 0 && !checked;
+                    const prereqTasks = prereqs.map(id => taskMap.get(id)).filter(Boolean) as FlatTask[];
 
                     return (
                       <li 
@@ -692,11 +733,11 @@ export default function PlanPage() {
                         style={{ 
                           marginBottom: 14,
                           padding: 16,
-                          backgroundColor: checked ? "#f3f4f6" : "white",
+                          backgroundColor: checked ? "#f3f4f6" : hasUnmetPrereqs ? "#fef3c7" : "white",
                           borderRadius: 0,
-                          border: checked ? "2px solid #d1d5db" : `2px solid ${category.border}`,
+                          border: checked ? "2px solid #d1d5db" : hasUnmetPrereqs ? "2px solid #f59e0b" : `2px solid ${category.border}`,
                           transition: "all 0.2s",
-                          opacity: checked ? 0.7 : 1
+                          opacity: checked ? 0.7 : hasUnmetPrereqs ? 0.8 : 1
                         }}
                         onMouseEnter={(e) => {
                           if (!checked) {
@@ -723,18 +764,20 @@ export default function PlanPage() {
                             type="checkbox"
                             checked={checked}
                             onChange={() => toggleTask(t.id)}
+                            disabled={hasUnmetPrereqs}
                             style={{
                               marginTop: 2,
                               width: 22,
                               height: 22,
-                              cursor: "pointer",
+                              cursor: hasUnmetPrereqs ? "not-allowed" : "pointer",
                               accentColor: category.border,
+                              opacity: hasUnmetPrereqs ? 0.5 : 1
                             }}
                           />
                           <div style={{ flex: 1 }}>
                             <span style={{ 
                               textDecoration: checked ? "line-through" : "none",
-                              color: checked ? "#9ca3af" : "#1e3a5f",
+                              color: checked ? "#9ca3af" : hasUnmetPrereqs ? "#92400e" : "#1e3a5f",
                               fontSize: 16,
                               lineHeight: 1.6,
                               display: "block",
@@ -742,6 +785,53 @@ export default function PlanPage() {
                             }}>
                               {t.text}
                             </span>
+                            
+                            {/* Prerequisites display */}
+                            {prereqs.length > 0 && (
+                              <div style={{
+                                marginTop: 8,
+                                padding: 10,
+                                backgroundColor: hasUnmetPrereqs ? "#fef3c7" : "#f0fdf4",
+                                border: `1px solid ${hasUnmetPrereqs ? "#f59e0b" : "#059669"}`,
+                                borderRadius: 0
+                              }}>
+                                <div style={{
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  color: hasUnmetPrereqs ? "#92400e" : "#166534",
+                                  marginBottom: 6
+                                }}>
+                                  {hasUnmetPrereqs ? "⏳ Prerequisites Required:" : "✅ Prerequisites Met:"}
+                                </div>
+                                <div style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 4
+                                }}>
+                                  {prereqTasks.map(prereq => {
+                                    const prereqCompleted = completedSet.has(prereq.id);
+                                    return (
+                                      <div key={prereq.id} style={{
+                                        fontSize: 11,
+                                        color: prereqCompleted ? "#059669" : "#92400e",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 6
+                                      }}>
+                                        <span>{prereqCompleted ? "✓" : "○"}</span>
+                                        <span style={{
+                                          textDecoration: prereqCompleted ? "line-through" : "none",
+                                          opacity: prereqCompleted ? 0.7 : 1
+                                        }}>
+                                          {prereq.text}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            
                             <div style={{ 
                               marginTop: 10,
                               display: "flex",
@@ -768,6 +858,19 @@ export default function PlanPage() {
                               }}>
                                 {category.icon} {t.category}
                               </span>
+                              {hasUnmetPrereqs && (
+                                <span style={{
+                                  fontSize: 12,
+                                  padding: "5px 10px",
+                                  borderRadius: 0,
+                                  backgroundColor: "#fef3c7",
+                                  color: "#92400e",
+                                  fontWeight: 700,
+                                  border: "1px solid #f59e0b"
+                                }}>
+                                  🔒 Blocked
+                                </span>
+                              )}
                             </div>
                           </div>
                         </label>
