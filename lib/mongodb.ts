@@ -18,28 +18,42 @@ if (!uri) {
 }
 
 // Configure MongoDB client options with proper SSL/TLS settings
-// Check if the URI indicates SSL/TLS is needed (MongoDB Atlas uses mongodb+srv://)
-const isAtlasConnection = uri.startsWith("mongodb+srv://") || uri.includes("ssl=true") || uri.includes("tls=true");
+// MongoDB Atlas uses mongodb+srv:// which automatically handles TLS
+// For regular mongodb:// connections, we may need to configure TLS explicitly
 
 const options: {
+    serverSelectionTimeoutMS?: number;
+    connectTimeoutMS?: number;
+    socketTimeoutMS?: number;
+    retryWrites?: boolean;
+    retryReads?: boolean;
+    maxPoolSize?: number;
+    minPoolSize?: number;
+    maxIdleTimeMS?: number;
     tls?: boolean;
     tlsAllowInvalidCertificates?: boolean;
     tlsAllowInvalidHostnames?: boolean;
-    serverSelectionTimeoutMS?: number;
-    connectTimeoutMS?: number;
-    retryWrites?: boolean;
-    retryReads?: boolean;
 } = {
-    // Enable TLS/SSL for MongoDB Atlas connections
-    // If using mongodb+srv://, TLS is automatically enabled
-    // For regular mongodb:// connections, only enable if explicitly needed
-    ...(isAtlasConnection && !uri.startsWith("mongodb+srv://") ? { tls: true } : {}),
     // Connection timeout settings (increase for production)
     serverSelectionTimeoutMS: 30000, // 30 seconds
     connectTimeoutMS: 30000, // 30 seconds
+    socketTimeoutMS: 45000, // 45 seconds
     // Retry settings for better reliability
     retryWrites: true,
     retryReads: true,
+    // Connection pool settings
+    maxPoolSize: 10,
+    minPoolSize: 1,
+    maxIdleTimeMS: 30000,
+    // For non-SRV connections, configure TLS if needed
+    // mongodb+srv:// automatically handles TLS, so we don't need to set it
+    ...(uri.startsWith("mongodb://") && (uri.includes("ssl=true") || uri.includes("tls=true")) ? {
+        tls: true,
+        // In production, these should be false for security
+        // Set to true only if you're having certificate validation issues
+        tlsAllowInvalidCertificates: process.env.NODE_ENV === "development",
+        tlsAllowInvalidHostnames: process.env.NODE_ENV === "development",
+    } : {}),
 };
 
 declare global {
@@ -50,15 +64,39 @@ declare global {
 let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
 
+// Helper function to create client with error handling
+function createClient() {
+    if (!uri) {
+        throw new Error("MONGODB_URI is not set");
+    }
+    try {
+        const mongoClient = new MongoClient(uri, options);
+        return mongoClient.connect().catch((error) => {
+            console.error("MongoDB connection error:", error);
+            // Log helpful debugging information
+            if (error.message?.includes("SSL") || error.message?.includes("TLS")) {
+                console.error("SSL/TLS Error detected. Check:");
+                console.error("1. MongoDB Atlas connection string format (should be mongodb+srv://...)");
+                console.error("2. IP whitelist in MongoDB Atlas includes DigitalOcean IPs");
+                console.error("3. MongoDB Atlas cluster is running and accessible");
+                console.error("4. Connection string is correctly set in environment variables");
+            }
+            throw error;
+        });
+    } catch (error) {
+        console.error("Failed to create MongoDB client:", error);
+        throw error;
+    }
+}
+
 if (process.env.NODE_ENV === "development"){
     if (!global._mongoClientPromise) {
-        client = new MongoClient(uri, options);
-        global._mongoClientPromise = client.connect();
+        clientPromise = createClient();
+        global._mongoClientPromise = clientPromise;
     }
     clientPromise = global._mongoClientPromise;
 }else{
-    client = new MongoClient(uri, options);
-    clientPromise = client.connect();
+    clientPromise = createClient();
 }
 
 export default clientPromise;
