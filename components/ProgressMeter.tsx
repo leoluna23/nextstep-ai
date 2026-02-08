@@ -23,7 +23,7 @@ export default function ProgressMeter(props:{
       style={{
         padding: 16,
         border: "1px solid #ddd",
-        borderRadius: 12,
+        borderRadius: 0,
         marginTop: 16,
       }}
     >
@@ -38,7 +38,7 @@ export default function ProgressMeter(props:{
         style={{
           height: 10,
           background: "#eee",
-          borderRadius: 999,
+          borderRadius: 0,
           marginTop: 10,
           overflow: "hidden",
         }}
